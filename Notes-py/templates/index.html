@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Notes
+
+{% endblock %}
+
+{% block main %}
+<link rel="stylesheet" href="/static/style.css">
+    <style>
+        #editPopup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border: 1px solid #ccc; }
+        #notes-list li { margin-bottom: 10px; }
+        #noteBtns-container button { margin-left: 5px; }
+        h1 {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+    <h1>Notes</h1>
+</nav>
+<!-- Search Form -->
+<form action="/" method="GET">
+    <input type="text" name="q" placeholder="Search notes..." value="{{ request.args.get('q', '') }}">
+    <button type="submit">Search</button>
+</form>
+
+<ul id="notes-list">
+    {% for note in notes %}
+        <li>
+            <div class="note-content">
+                {% if request.args.get('q') %}
+                    {{ note.text | replace(request.args.get('q'), "<mark>" + request.args.get('q') + "</mark>") | safe }}
+                {% else %}
+                    {{ note.text }}
+                {% endif %}
+            </div>
+            <div class="note-buttons">
+                <button id="editBtn" onclick="editPopup({{ note.id }}, '{{ note.text }}')">Edit</button>
+                <form action="/delete/{{ note.id }}" method="POST" style="display:inline;">
+                    <button id="deleteBtn" type="submit">Delete</button>
+                </form>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+
+
+
+    <!-- New Note Form -->
+    <form action="/create" method="POST">
+        <textarea name="note" placeholder="Enter your note..." required></textarea>
+        <button type="submit">Create Note</button>
+    </form>
+
+    <!-- Edit Note Popup -->
+    <div id="editPopup">
+        <form id="editForm" method="POST">
+            <textarea name="note" id="editNoteText" required></textarea>
+            <button type="submit">Update</button>
+        </form>
+        <button onclick="closeEditPopup()">Cancel</button>
+    </div>
+
+    <script>
+        // Open edit popup with current note data
+        function editPopup(noteId, noteText) {
+            document.getElementById('editPopup').style.display = 'block';
+            document.getElementById('editNoteText').value = noteText;
+            document.getElementById('editForm').action = `/edit/${noteId}`;
+        }
+
+        // Close edit popup
+        function closeEditPopup() {
+            document.getElementById('editPopup').style.display = 'none';
+        }
+    </script>
+</body>
+{% endblock %}
